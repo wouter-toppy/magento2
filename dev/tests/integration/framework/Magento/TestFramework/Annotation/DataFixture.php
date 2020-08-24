@@ -69,7 +69,7 @@ class DataFixture extends AbstractDataFixture
             if ($this->getDbIsolationState($test) !== ['disabled']) {
                 $param->requestTransactionStart();
             } else {
-                $this->saveDbStateBeforeTestRun();
+                $this->saveDbStateBeforeTestRun($test);
                 $this->_applyFixtures($fixtures);
             }
         }
@@ -78,9 +78,10 @@ class DataFixture extends AbstractDataFixture
     /**
      * At the first run before test we need to warm up attributes list to have native attributes list
      *
+     * @param TestCase $test
      * @return void
      */
-    private function saveDbStateBeforeTestRun(): void
+    private function saveDbStateBeforeTestRun(TestCase $test): void
     {
         try {
             if (empty($this->dbTableState)) {
@@ -89,9 +90,13 @@ class DataFixture extends AbstractDataFixture
                 }
             }
         } catch (\Exception $e) {
-            //Do nothing...
-            //For some tests resource connection is not specified and we could not query
-            //anything from db
+            $test->getTestResultObject()->addFailure(
+                $test,
+                new AssertionFailedError(
+                    $e->getMessage()
+                ),
+                0
+            );
         }
     }
 
