@@ -25,12 +25,12 @@ class DataFixture extends AbstractDataFixture
      *
      * @var array
      */
-    private static $dbTableState = [];
+    private $dbTableState = [];
 
     /**
      * @var string[]
      */
-    private static $dbStateTables = [
+    private $dbStateTables = [
         'catalog_product_entity',
         'eav_attribute',
         'catalog_category_entity',
@@ -83,9 +83,9 @@ class DataFixture extends AbstractDataFixture
     private function saveDbStateBeforeTestRun(): void
     {
         try {
-            if (empty(self::$dbTableState)) {
-                foreach (self::$dbStateTables as $table) {
-                    self::$dbTableState[$table] = $this->pullDbState($table);
+            if (empty($this->dbTableState)) {
+                foreach ($this->dbStateTables as $table) {
+                    $this->dbTableState[$table] = $this->pullDbState($table);
                 }
             }
         } catch (\Exception $e) {
@@ -133,12 +133,14 @@ class DataFixture extends AbstractDataFixture
     }
 
     /**
+     * Compare data from
+     *
      * @param TestCase $test
      */
     private function checkResidualData(\PHPUnit\Framework\TestCase $test)
     {
         $isolationProblem = [];
-        foreach (self::$dbTableState as $table => $isolationData) {
+        foreach ($this->dbTableState as $table => $isolationData) {
             try {
                 $diff = $this->dataDiff(
                     $isolationData,

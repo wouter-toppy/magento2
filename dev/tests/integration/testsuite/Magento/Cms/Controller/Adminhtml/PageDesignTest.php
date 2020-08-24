@@ -11,7 +11,6 @@ namespace Magento\Cms\Controller\Adminhtml;
 use Magento\Cms\Api\Data\PageInterface;
 use Magento\Cms\Api\GetPageByIdentifierInterface;
 use Magento\Cms\Model\Page;
-use Magento\Cms\Model\PageFactory;
 use Magento\Framework\Acl\Builder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Request\Http as HttpRequest;
@@ -99,11 +98,18 @@ class PageDesignTest extends AbstractBackendController
         $this->removeUrlRewrites();
     }
 
-    private function removeUrlRewrites()
+    /**
+     * Removes url rewrites created during test execution.
+     *
+     * @return void
+     */
+    private function removeUrlRewrites(): void
     {
         if (!empty($this->pagesToDelete)) {
             /** @var UrlRewriteCollectionFactory $urlRewriteCollectionFactory */
-            $urlRewriteCollectionFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(UrlRewriteCollectionFactory::class);
+            $urlRewriteCollectionFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+                UrlRewriteCollectionFactory::class
+            );
             /** @var UrlRewriteCollection $urlRewriteCollection */
             $urlRewriteCollection = $urlRewriteCollectionFactory->create();
             $urlRewriteCollection->addFieldToFilter('request_path', ['in' => $this->pagesToDelete]);
@@ -117,7 +123,6 @@ class PageDesignTest extends AbstractBackendController
                 }
             }
         }
-
     }
 
     /**

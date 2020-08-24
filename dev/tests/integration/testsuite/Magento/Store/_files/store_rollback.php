@@ -32,9 +32,10 @@ if ($store->getId()) {
     $store->delete();
 }
 
-
 /** @var UrlRewriteCollectionFactory $urlRewriteCollectionFactory */
-$urlRewriteCollectionFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(UrlRewriteCollectionFactory::class);
+$urlRewriteCollectionFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
+    UrlRewriteCollectionFactory::class
+);
 /** @var UrlRewriteCollection $urlRewriteCollection */
 $urlRewriteCollection = $urlRewriteCollectionFactory->create();
 $urlRewriteCollection
