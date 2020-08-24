@@ -20,7 +20,7 @@ $store = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Ma
 $store->load('fixture_second_store');
 
 if ($store->getId()) {
-    $storeId = $store;
+    $storeId = $store->getId();
 
     $urlRewriteCollectionFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->get(
         UrlRewriteCollectionFactory::class
