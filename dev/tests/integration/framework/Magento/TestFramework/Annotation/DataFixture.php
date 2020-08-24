@@ -7,7 +7,10 @@ declare(strict_types=1);
 
 namespace Magento\TestFramework\Annotation;
 
+use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\ResourceConnection;
 use Magento\TestFramework\Event\Param\Transaction;
+use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -18,6 +21,40 @@ class DataFixture extends AbstractDataFixture
     public const ANNOTATION = 'magentoDataFixture';
 
     /**
+     * This variable was created to keep initial data cached
+     *
+     * @var array
+     */
+    private static $dbTableState = [];
+
+    /**
+     * @var string[]
+     */
+    private static $dbStateTables = [
+        'catalog_product_entity',
+        'eav_attribute',
+        'catalog_category_entity',
+        'eav_attribute_set',
+        'store',
+        'store_website',
+        'url_rewrite'
+    ];
+
+    /**
+     * Pull data from specific table
+     *
+     * @param string $table
+     * @return array
+     */
+    private function pullDbState(string $table): array
+    {
+        $resource = ObjectManager::getInstance()->get(ResourceConnection::class);
+        $connection = $resource->getConnection();
+        $select = $connection->select()->from($table);
+        return $connection->fetchAll($select);
+    }
+
+    /**
      * Handler for 'startTestTransactionRequest' event
      *
      * @param TestCase $test
@@ -26,6 +63,7 @@ class DataFixture extends AbstractDataFixture
      */
     public function startTestTransactionRequest(TestCase $test, Transaction $param): void
     {
+        $this->saveDbStateBeforeTestRun();
         $fixtures = $this->_getFixtures($test);
         /* Start transaction before applying first fixture to be able to revert them all further */
         if ($fixtures) {
@@ -35,6 +73,43 @@ class DataFixture extends AbstractDataFixture
                 $this->_applyFixtures($fixtures);
             }
         }
+    }
+
+    /**
+     * At the first run before test we need to warm up attributes list to have native attributes list
+     *
+     * @return void
+     */
+    private function saveDbStateBeforeTestRun(): void
+    {
+        try {
+            if (empty(self::$dbTableState)) {
+                foreach (self::$dbStateTables as $table) {
+                    self::$dbTableState[$table] = $this->pullDbState($table);
+                }
+            }
+        } catch (\Exception $e) {
+            //Do nothing...
+            //For some tests resource connection is not specified and we could not query
+            //anything from db
+        }
+    }
+
+    /**
+     * Compare data difference for m-dimensional array
+     *
+     * @param array $dataBefore
+     * @param array $dataAfter
+     * @return bool
+     */
+    private function dataDiff(array $dataBefore, array $dataAfter): array
+    {
+        $diff = [];
+        if (count($dataBefore) !== count($dataAfter)) {
+            $diff = array_slice($dataAfter, count($dataBefore));
+        }
+
+        return $diff;
     }
 
     /**
@@ -53,6 +128,40 @@ class DataFixture extends AbstractDataFixture
             } else {
                 $this->_revertFixtures();
             }
+        }
+        $this->checkResidualData($test);
+    }
+
+    /**
+     * @param TestCase $test
+     */
+    private function checkResidualData(\PHPUnit\Framework\TestCase $test)
+    {
+        $isolationProblem = [];
+        foreach (self::$dbTableState as $table => $isolationData) {
+            try {
+                $diff = $this->dataDiff(
+                    $isolationData,
+                    $this->pullDbState($table)
+                );
+
+                if (!empty($diff)) {
+                    $isolationProblem[$table] = $diff;
+                }
+            } catch (\Exception $e) {
+                //ResourceConnection could be not specified in some specific tests that are not working with DB
+                //We need to ignore it
+            }
+        }
+
+        if (!empty($isolationProblem)) {
+            $test->getTestResultObject()->addFailure(
+                $test,
+                new AssertionFailedError(
+                    "There was a problem with isolation: " . var_export($isolationProblem, true)
+                ),
+                0
+            );
         }
     }
 
