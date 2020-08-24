@@ -66,7 +66,7 @@ class DbIsolation
         \PHPUnit\Framework\TestCase $test,
         \Magento\TestFramework\Event\Param\Transaction $param
     ) {
-        $this->warmUpIsolationCache();
+        //$this->warmUpIsolationCache();
         $methodIsolation = $this->_getIsolation($test);
         if ($this->_isIsolationActive) {
             if ($methodIsolation === false) {
@@ -126,33 +126,6 @@ class DbIsolation
     ) {
         if ($this->_isIsolationActive && $this->_getIsolation($test)) {
             $param->requestTransactionRollback();
-        } else {
-            $isolationProblem = [];
-            foreach (self::$isolationCache as $table => $isolationData) {
-                try {
-                    $diff = $this->dataDiff(
-                        $isolationData,
-                        $this->pullDbState($table)
-                    );
-
-                    if (!empty($diff)) {
-                        $isolationProblem[$table] = $diff;
-                    }
-                } catch (\Exception $e) {
-                    //ResourceConnection could be not specified in some specific tests that are not working with DB
-                    //We need to ignore it
-                }
-            }
-
-            if (!empty($isolationProblem)) {
-//                $test->getTestResultObject()->addFailure(
-//                    $test,
-//                    new AssertionFailedError(
-//                        "There was a problem with isolation: " . var_export($isolationProblem, true)
-//                    ),
-//                    0
-//                );
-            }
         }
     }
 

@@ -63,13 +63,13 @@ class DataFixture extends AbstractDataFixture
      */
     public function startTestTransactionRequest(TestCase $test, Transaction $param): void
     {
-        $this->saveDbStateBeforeTestRun();
         $fixtures = $this->_getFixtures($test);
         /* Start transaction before applying first fixture to be able to revert them all further */
         if ($fixtures) {
             if ($this->getDbIsolationState($test) !== ['disabled']) {
                 $param->requestTransactionStart();
             } else {
+                $this->saveDbStateBeforeTestRun();
                 $this->_applyFixtures($fixtures);
             }
         }
@@ -127,9 +127,9 @@ class DataFixture extends AbstractDataFixture
                 $param->requestTransactionRollback();
             } else {
                 $this->_revertFixtures();
+                $this->checkResidualData($test);
             }
         }
-        $this->checkResidualData($test);
     }
 
     /**
