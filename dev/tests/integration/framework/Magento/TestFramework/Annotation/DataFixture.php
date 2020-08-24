@@ -89,7 +89,7 @@ class DataFixture extends AbstractDataFixture
                     $this->dbTableState[$table] = $this->pullDbState($table);
                 }
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $test->getTestResultObject()->addFailure(
                 $test,
                 new AssertionFailedError(
