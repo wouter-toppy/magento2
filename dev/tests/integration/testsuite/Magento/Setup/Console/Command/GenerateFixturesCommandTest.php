@@ -87,6 +87,9 @@ class GenerateFixturesCommandTest extends \Magento\TestFramework\Indexer\TestCas
     {
         $this->setIncrement(1);
 
+        self::restoteFromDb();
+        self::$dbRestored = true;
+
         parent::tearDown();
     }
 
