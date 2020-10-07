@@ -20,6 +20,7 @@ if ($block->dictionaryEnabled()) {
     $dictionaryFileName = /* @noEscape */ Magento\Translation\Model\Js\Config::DICTIONARY_FILE_NAME;
 
     $scriptString = <<<script
+        document.addEventListener("DOMContentLoaded", function (event) {
         require.config({
             deps: [
                 'jquery',
@@ -56,6 +57,7 @@ if ($block->dictionaryEnabled()) {
                     }
                 });
             }
+        });
         });
 script;
     echo /* @noEscape */ $secureRenderer->renderTag('script', [], $scriptString, false);
